@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gnosis — Focus Practice</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="page-wrapper">
+        <div class="home-card">
+            <div class="brand">
+                <span class="brand-dot"></span>
+                <span class="brand-name">Gnosis</span>
+            </div>
+            <h1 class="home-title" style="font-size:1.8rem;">Focus Practice</h1>
+            <p class="home-sub">Pick a category and difficulty. You'll get 10 questions.</p>
+
+            <form method="post" action="{{ url_for('focus_start') }}" class="name-form">
+
+                <!-- Category selection -->
+                <p class="mode-label">Category</p>
+                <div class="mode-toggle">
+                    <label class="mode-option">
+                        <input type="radio" name="category" value="Math" checked />
+                        <span class="mode-btn">
+                            <span class="mode-title">Math</span>
+                            <span class="mode-desc">Algebra, geometry, data</span>
+                        </span>
+                    </label>
+                    <label class="mode-option">
+                        <input type="radio" name="category" value="Reading and Writing" />
+                        <span class="mode-btn">
+                            <span class="mode-title">Reading &amp; Writing</span>
+                            <span class="mode-desc">Inference, grammar, vocab</span>
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Difficulty selection -->
+                <p class="mode-label" style="margin-top:1rem;">Difficulty</p>
+                <div class="mode-toggle" style="grid-template-columns: 1fr 1fr 1fr;">
+                    <label class="mode-option">
+                        <input type="radio" name="difficulty" value="easy" checked />
+                        <span class="mode-btn">
+                            <span class="mode-title">Easy</span>
+                        </span>
+                    </label>
+                    <label class="mode-option">
+                        <input type="radio" name="difficulty" value="medium" />
+                        <span class="mode-btn">
+                            <span class="mode-title">Medium</span>
+                        </span>
+                    </label>
+                    <label class="mode-option">
+                        <input type="radio" name="difficulty" value="hard" />
+                        <span class="mode-btn">
+                            <span class="mode-title">Hard</span>
+                        </span>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-primary" style="margin-top:1.5rem;">Start &rarr;</button>
+            </form>
+
+            <div class="home-links">
+                <a href="{{ url_for('home') }}" class="home-link">← Back to Home</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

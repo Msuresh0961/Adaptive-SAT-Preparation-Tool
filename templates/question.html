@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gnosis — Question</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- Configure MathJax to render LaTeX math in SAT questions -->
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']]
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea'],
+                ignoreHtmlClass: 'no-mathjax'
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+
+    {% if mode == "sat" %}
+    <!-- ── SAT Mode Layout — split left/right like the real SAT ── -->
+    <div class="sat-page-wrapper">
+
+        <header class="sat-header">
+            <span class="brand-name">Gnosis</span>
+            <span class="sat-mode-badge">SAT Prep</span>
+            <span class="sat-progress">Question {{ question_num }} of {{ total }}</span>
+            <span class="player-tag">{{ username }}</span>
+        </header>
+
+        <div class="sat-layout">
+
+            <!-- Left panel: question text -->
+            <div class="sat-left">
+                <!-- Category label passed from Flask (Math or Reading and Writing) -->
+                <p class="sat-question-label">{{ category }}</p>
+                <div class="sat-question-body">
+                    {{ question | safe }}
+                </div>
+            </div>
+
+            <!-- Right panel: answer choices -->
+            <div class="sat-right">
+                <p class="sat-answer-label">Choose the best answer.</p>
+
+                <form method="post" id="answerForm">
+                    <!-- Hidden field stores the selected letter -->
+                    <input type="hidden" name="answer" id="answerInput" value="" />
+
+                    <div class="sat-choices">
+                        <button type="button" class="sat-choice-btn" onclick="selectChoice('A', this)">
+                            <!-- no-mathjax prevents MathJax from processing the letter badge -->
+                            <span class="sat-choice-letter no-mathjax">A</span>
+                            <span class="sat-choice-text">{{ choice_a | safe }}</span>
+                        </button>
+                        <button type="button" class="sat-choice-btn" onclick="selectChoice('B', this)">
+                            <span class="sat-choice-letter no-mathjax">B</span>
+                            <span class="sat-choice-text">{{ choice_b | safe }}</span>
+                        </button>
+                        <button type="button" class="sat-choice-btn" onclick="selectChoice('C', this)">
+                            <span class="sat-choice-letter no-mathjax">C</span>
+                            <span class="sat-choice-text">{{ choice_c | safe }}</span>
+                        </button>
+                        <button type="button" class="sat-choice-btn" onclick="selectChoice('D', this)">
+                            <span class="sat-choice-letter no-mathjax">D</span>
+                            <span class="sat-choice-text">{{ choice_d | safe }}</span>
+                        </button>
+                    </div>
+
+                    <!-- Skip button -->
+                    <button type="button" class="btn-skip" style="margin-top: 1rem;" onclick="skipQuestion()">Skip</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- ── Quick Quiz Mode Layout — centered card ── -->
+    <div class="page-wrapper">
+        <header class="quiz-header">
+            <span class="brand-name">Gnosis</span>
+            <span class="player-tag">{{ username }}</span>
+        </header>
+
+        <div class="quiz-card">
+            <!-- Timer ring only shown in Quick Quiz mode — SAT mode has no time limit -->
+            <div class="timer-ring-wrapper">
+                <svg class="timer-ring" viewBox="0 0 80 80">
+                    <circle class="ring-bg" cx="40" cy="40" r="34"/>
+                    <circle class="ring-fill" id="ringFill" cx="40" cy="40" r="34"/>
+                </svg>
+                <!-- Timer number updated every second by mechanics.js -->
+                <span class="timer-number" id="timer">{{ time_left }}</span>
+            </div>
+
+            <!-- Question counter and question text passed from Flask -->
+            <p class="question-label">Question {{ question_num }} of {{ total }}</p>
+            <h2 class="question-text">{{ question | safe }}</h2>
+
+            <form method="post" id="answerForm" class="answer-form">
+                <input
+                    type="text"
+                    name="answer"
+                    id="answerInput"
+                    placeholder="Type your answer…"
+                    autocomplete="off"
+                />
+                <!-- Hidden field to mark a normal submission (not a skip) -->
+                <input type="hidden" name="skipped" value="0" />
+                <button type="submit" class="btn-primary">Submit &rarr;</button>
+                <!-- Skip button sets skipped=1 and submits without an answer -->
+                <button type="button" class="btn-skip" onclick="skipQuestion()">Skip</button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Pass the mode to JS so it knows whether to run the timer or not -->
+    <script>
+        const QUIZ_MODE = "{{ mode }}";
+    </script>
+    <!-- External JS file handles countdown timer, skip logic, and choice selection -->
+    <script src="{{ url_for('static', filename='js/mechanics.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gnosis — Leaderboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="page-wrapper">
+        <header class="quiz-header" style="max-width: 700px; width: 100%;">
+            <a href="{{ url_for('home') }}" class="brand-name" style="text-decoration:none;">Gnosis</a>
+            <span class="player-tag">Leaderboard</span>
+        </header>
+
+        <div class="lb-card">
+            <!-- Tab switcher -->
+            <div class="lb-tabs">
+                <button class="lb-tab active" onclick="switchTab('quick', this)">Quick Quiz</button>
+                <button class="lb-tab" onclick="switchTab('sat', this)">SAT Prep</button>
+            </div>
+
+            <!-- Quick Quiz leaderboard -->
+            <div class="lb-panel" id="tab-quick">
+                {% if quick_board %}
+                <table class="lb-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Player</th>
+                            <th>Score</th>
+                            <th>%</th>
+                            <th>Skipped</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in quick_board %}
+                        <tr class="{{ 'lb-gold' if loop.index == 1 else 'lb-silver' if loop.index == 2 else 'lb-bronze' if loop.index == 3 else '' }}">
+                            <td class="lb-rank">{{ loop.index }}</td>
+                            <td class="lb-name">{{ entry.username }}</td>
+                            <td>{{ entry.score }} / {{ entry.total }}</td>
+                            <td class="lb-pct">{{ entry.pct }}%</td>
+                            <td>{{ entry.skipped }}</td>
+                            <td class="lb-date">{{ entry.played_at[:10] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="lb-empty">No Quick Quiz scores yet. Be the first!</p>
+                {% endif %}
+            </div>
+
+            <!-- SAT leaderboard -->
+            <div class="lb-panel" id="tab-sat" style="display:none;">
+                {% if sat_board %}
+                <table class="lb-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Player</th>
+                            <th>Score</th>
+                            <th>%</th>
+                            <th>Skipped</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in sat_board %}
+                        <tr class="{{ 'lb-gold' if loop.index == 1 else 'lb-silver' if loop.index == 2 else 'lb-bronze' if loop.index == 3 else '' }}">
+                            <td class="lb-rank">{{ loop.index }}</td>
+                            <td class="lb-name">{{ entry.username }}</td>
+                            <td>{{ entry.score }} / {{ entry.total }}</td>
+                            <td class="lb-pct">{{ entry.pct }}%</td>
+                            <td>{{ entry.skipped }}</td>
+                            <td class="lb-date">{{ entry.played_at[:10] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="lb-empty">No SAT scores yet. Be the first!</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <a href="{{ url_for('home') }}" class="btn-primary" style="max-width:300px; width:100%; text-align:center; text-decoration:none; margin-top:1.5rem; display:block;">
+            Back to Home
+        </a>
+    </div>
+
+    <script>
+        // Switch between Quick Quiz and SAT leaderboard tabs
+        function switchTab(tab, btn) {
+            document.querySelectorAll('.lb-panel').forEach(p => p.style.display = 'none');
+            document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-' + tab).style.display = 'block';
+            btn.classList.add('active');
+        }
+    </script>
+</body>
+</html>

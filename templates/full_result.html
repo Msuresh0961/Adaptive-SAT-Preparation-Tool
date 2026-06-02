@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gnosis — Full Test Results</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="page-wrapper">
+        <div class="result-card" style="max-width:560px;">
+            <span class="brand-name">Gnosis</span>
+
+            <h2 class="home-title" style="font-size:1.6rem; margin-top:1rem;">Practice Test {{ test_number }} Results</h2>
+
+            <!-- Estimated SAT score -->
+            <div class="sat-score-display">
+                <span class="sat-score-label">Estimated SAT Score</span>
+                <span class="sat-score-value">{{ sat_score }}</span>
+                <span class="sat-score-range">out of 1600</span>
+            </div>
+
+            <!-- Per-section breakdown -->
+            <div class="full-result-grid">
+                <div class="full-result-section">
+                    <p class="stats-section-title">Reading &amp; Writing</p>
+                    <p class="section-score">{{ rw_score }} / {{ rw_total }}</p>
+                    <p class="section-detail">
+                        Module 1: {{ rw_m1_score }}/{{ rw_m1_total }} &nbsp;·&nbsp;
+                        Module 2: {{ rw_m2_score }}/{{ rw_m2_total }}
+                        ({{ rw_m2_diff }} section)
+                    </p>
+                    <div class="section-bar-bg">
+                        <div class="section-bar" style="width:{{ (rw_score / rw_total * 100)|int }}%;"></div>
+                    </div>
+                </div>
+
+                <div class="full-result-section">
+                    <p class="stats-section-title">Math</p>
+                    <p class="section-score">{{ math_score }} / {{ math_total }}</p>
+                    <p class="section-detail">
+                        Module 1: {{ math_m1_score }}/{{ math_m1_total }} &nbsp;·&nbsp;
+                        Module 2: {{ math_m2_score }}/{{ math_m2_total }}
+                        ({{ math_m2_diff }} section)
+                    </p>
+                    <div class="section-bar-bg">
+                        <div class="section-bar" style="width:{{ (math_score / math_total * 100)|int }}%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total raw score -->
+            <div class="score-pill" style="margin-top:1rem;">
+                Total: <strong>{{ rw_score + math_score }} / {{ rw_total + math_total }}</strong> correct
+            </div>
+        <div style="display:flex; gap:0.75rem; margin-top:2rem;">
+            <a href="{{ url_for('full_test_review') }}" class="btn-skip"
+            style="flex:1; text-decoration:none; text-align:center; padding:0.9rem;">
+                📋 Review Answers
+            </a>
+            <a href="{{ url_for('home') }}" class="btn-primary"
+            style="flex:1; text-decoration:none; text-align:center;">
+                Back to Home
+            </a>
+        </div>       
+        </div>
+    </div>
+</body>
+</html>
