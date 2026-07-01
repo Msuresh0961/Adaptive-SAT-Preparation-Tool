@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gnosis — Test {{ test_number }} Review</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script>
+        MathJax = {
+            tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']] },
+            options: { skipHtmlTags: ['script','noscript','style','textarea'] }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        .review-wrapper {
+            min-height: 100vh;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .review-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.85rem 2rem;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .review-header .player-tag { margin-left: auto; }
+
+        .review-body {
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+            width: 100%;
+        }
+
+        .review-title {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.6rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .review-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        /* Filter tabs */
+        .review-filters {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.4rem 1rem;
+            border-radius: 100px;
+            border: 1.5px solid var(--border);
+            background: var(--surface);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 500;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.15s;
+        }
+
+        .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .filter-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        /* Question review card */
+        .review-question-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            transition: box-shadow 0.15s;
+        }
+
+        .review-question-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+
+        .review-q-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.85rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .review-q-num {
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            min-width: 32px;
+        }
+
+        .review-status-badge {
+            padding: 3px 10px;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-correct {
+            background: #E1F5EE;
+            color: #0F6E56;
+        }
+
+        .badge-incorrect {
+            background: #FAECE7;
+            color: #993C1D;
+        }
+
+        .badge-skipped {
+            background: #F3F4F6;
+            color: #6B7280;
+        }
+
+        .review-q-preview {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .review-q-arrow {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            transition: transform 0.2s;
+        }
+
+        .review-q-arrow.open { transform: rotate(180deg); }
+
+        .review-q-body {
+            padding: 1.25rem 1.5rem;
+            display: none;
+        }
+
+        .review-q-body.open { display: block; }
+
+        .review-question-text {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.975rem;
+            line-height: 1.7;
+            color: var(--text-primary);
+            margin-bottom: 1.25rem;
+        }
+
+        .review-choices {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .review-choice {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 0.7rem 1rem;
+            border-radius: 10px;
+            border: 1.5px solid var(--border);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .review-choice.correct-choice {
+            border-color: #1D9E75;
+            background: #E1F5EE;
+        }
+
+        .review-choice.wrong-choice {
+            border-color: #993C1D;
+            background: #FAECE7;
+        }
+
+        .review-choice.neutral-choice {
+            background: var(--bg);
+        }
+
+        .choice-letter-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            flex-shrink: 0;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-secondary);
+        }
+
+        .correct-choice .choice-letter-badge {
+            background: #1D9E75;
+            color: white;
+            border-color: #1D9E75;
+        }
+
+        .wrong-choice .choice-letter-badge {
+            background: #993C1D;
+            color: white;
+            border-color: #993C1D;
+        }
+
+        .review-answer-row {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .review-answer-row span strong { color: var(--text-primary); }
+
+        .module-divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1.5rem 0 1rem;
+        }
+
+        .module-divider-line {
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .module-divider-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .review-summary-bar {
+            display: flex;
+            gap: 1rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .summary-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            min-width: 80px;
+        }
+
+        .summary-stat-num {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.6rem;
+            line-height: 1;
+        }
+
+        .summary-stat-num.green { color: #1D9E75; }
+        .summary-stat-num.red   { color: #993C1D; }
+        .summary-stat-num.gray  { color: var(--text-muted); }
+
+        .summary-stat-label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        @media (max-width: 600px) {
+            .review-header { padding: 0.85rem 1rem; }
+            .review-body   { padding: 1rem; }
+            .review-q-preview { display: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="review-wrapper">
+
+    <!-- Header -->
+    <header class="review-header">
+        <span class="brand-name">Gnosis</span>
+        <span class="sat-mode-badge">Practice Test {{ test_number }} Review</span>
+        <span class="player-tag">{{ username }}</span>
+    </header>
+
+    <div class="review-body">
+        <h2 class="review-title">Answer Review</h2>
+        <p class="review-subtitle">Practice Test {{ test_number }} · {{ results|length }} questions total</p>
+        <!-- Floating AI Tutor button -->
+        <div style="position:fixed; bottom:2rem; right:2rem; z-index:100;">
+            <a href="{{ url_for('ai_tutor') }}"
+               style="display:flex; align-items:center; gap:0.5rem; padding:0.75rem 1.25rem;
+                      background:var(--accent); color:white; border-radius:100px;
+                      text-decoration:none; font-size:0.9rem; font-weight:500;
+                      box-shadow:0 4px 16px rgba(232,98,42,0.4);">
+                🤖 Chat with AI Tutor
+            </a>
+        </div>
+
+        <!-- Summary bar -->
+        <div class="review-summary-bar">
+            <div class="summary-stat">
+                <span class="summary-stat-num green">{{ results|selectattr('correct')|list|length }}</span>
+                <span class="summary-stat-label">Correct</span>
+            </div>
+            <div class="summary-stat">
+                <span class="summary-stat-num red">{{ results|rejectattr('correct')|rejectattr('skipped')|list|length }}</span>
+                <span class="summary-stat-label">Incorrect</span>
+            </div>
+            <div class="summary-stat">
+                <span class="summary-stat-num gray">{{ results|selectattr('skipped')|list|length }}</span>
+                <span class="summary-stat-label">Skipped</span>
+            </div>
+            <div class="summary-stat">
+                <span class="summary-stat-num" style="color:var(--accent);">{{ sat_score }}</span>
+                <span class="summary-stat-label">Est. SAT Score</span>
+            </div>
+        </div>
+
+        <!-- Filter buttons -->
+        <div class="review-filters">
+            <button class="filter-btn active" onclick="filterCards('all', this)">All</button>
+            <button class="filter-btn" onclick="filterCards('correct', this)">✓ Correct</button>
+            <button class="filter-btn" onclick="filterCards('incorrect', this)">✗ Incorrect</button>
+            <button class="filter-btn" onclick="filterCards('skipped', this)">— Skipped</button>
+        </div>
+
+        <!-- Questions grouped by module -->
+        {% set modules = [
+            ('RW Module 1', results[:rw_m1_total]),
+            ('RW Module 2', results[rw_m1_total:rw_m1_total+rw_m2_total]),
+            ('Math Module 1', results[rw_m1_total+rw_m2_total:rw_m1_total+rw_m2_total+math_m1_total]),
+            ('Math Module 2', results[rw_m1_total+rw_m2_total+math_m1_total:])
+        ] %}
+
+        {% set q_counter = namespace(n=0) %}
+        {% for module_name, module_results in modules %}
+            {% if module_results %}
+            <div class="module-divider">
+                <div class="module-divider-line"></div>
+                <span class="module-divider-label">{{ module_name }}</span>
+                <div class="module-divider-line"></div>
+            </div>
+
+            {% for r in module_results %}
+            {% set q_counter.n = q_counter.n + 1 %}
+            <div class="review-question-card"
+                 data-status="{{ 'correct' if r.correct else ('skipped' if r.skipped else 'incorrect') }}">
+
+                <div class="review-q-header" onclick="toggleCard(this)">
+                    <span class="review-q-num">Q{{ q_counter.n }}</span>
+                    <span class="review-status-badge {{ 'badge-correct' if r.correct else ('badge-skipped' if r.skipped else 'badge-incorrect') }}">
+                        {{ '✓ Correct' if r.correct else ('— Skipped' if r.skipped else '✗ Incorrect') }}
+                    </span>
+                    <span class="review-q-preview">{{ r.question[:80] }}...</span>
+                    <span class="review-q-arrow">▾</span>
+                </div>
+
+                <div class="review-q-body">
+                    <div class="review-question-text">{{ r.question }}</div>
+
+                    <div class="review-choices">
+                        {% for letter, text in [('A', r.choice_a), ('B', r.choice_b), ('C', r.choice_c), ('D', r.choice_d)] %}
+                        {% set is_correct = letter == r.correct_answer %}
+                        {% set is_chosen  = letter == r.chosen_answer %}
+                        <div class="review-choice
+                            {{ 'correct-choice' if is_correct else ('wrong-choice' if is_chosen and not r.correct else 'neutral-choice') }}">
+                            <span class="choice-letter-badge">{{ letter }}</span>
+                            <span>{{ text }}
+                                {% if is_correct %} ✓{% endif %}
+                                {% if is_chosen and not is_correct %} ← your answer{% endif %}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="review-answer-row">
+                        <span>Correct answer: <strong>{{ r.correct_answer }}</strong></span>
+                        <span>Your answer: <strong>{{ r.chosen_answer if r.chosen_answer else '—' }}</strong></span>
+                        {% if r.skipped %}<span style="color:#6B7280;">Skipped</span>{% endif %}
+                    </div>
+                    {% if r.explanation %}
+                    <div style="margin-top:0.75rem; padding:0.75rem 1rem; background:var(--accent-light); border-radius:8px; font-size:0.875rem; color:var(--accent-dark); line-height:1.6;">
+                        <strong>Explanation:</strong> {{ r.explanation }}
+                    </div>
+                    {% endif %}
+                    {% if not r.correct %}
+                    <div style="margin-top:0.75rem;">
+                        <a href="{{ url_for('ai_tutor') }}?q={{ q_counter.n - 1 }}"
+                           style="display:inline-block; padding:0.4rem 1rem; background:var(--text-primary); color:white; border-radius:8px; font-size:0.82rem; text-decoration:none;">
+                            🤖 Ask AI Tutor
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+        {% endfor %}
+
+        <!-- Back buttons -->
+        <div style="display:flex; gap:1rem; margin-top:2rem;">
+            <a href="{{ url_for('home') }}" class="btn-skip"
+               style="flex:1; text-align:center; text-decoration:none; padding:0.9rem;">
+                ← Home
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleCard(header) {
+    const body  = header.nextElementSibling;
+    const arrow = header.querySelector('.review-q-arrow');
+    const open  = body.classList.contains('open');
+    body.classList.toggle('open', !open);
+    arrow.classList.toggle('open', !open);
+}
+
+function filterCards(status, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    document.querySelectorAll('.review-question-card').forEach(card => {
+        if (status === 'all' || card.dataset.status === status) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    // Hide module dividers if all cards in that section are hidden
+    document.querySelectorAll('.module-divider').forEach(divider => {
+        let next = divider.nextElementSibling;
+        let hasVisible = false;
+        while (next && !next.classList.contains('module-divider')) {
+            if (next.style.display !== 'none') hasVisible = true;
+            next = next.nextElementSibling;
+        }
+        divider.style.display = hasVisible ? '' : 'none';
+    });
+}
+</script>
+</body>
+</html>

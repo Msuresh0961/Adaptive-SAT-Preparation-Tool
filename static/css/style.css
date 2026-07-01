@@ -1,0 +1,1239 @@
+/* ── Reset & Base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --accent: #E8622A;
+    --accent-light: #FBE9DF;
+    --accent-dark: #C44E1B;
+    --text-primary: #1A1917;
+    --text-secondary: #6B6860;
+    --text-muted: #A09F99;
+    --bg: #F7F5F2;
+    --surface: #FFFFFF;
+    --border: #E5E3DE;
+    --ring-total: 213.6; /* 2 * pi * 34 */
+}
+
+html, body {
+    height: 100%;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ── Layout ── */
+.page-wrapper {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+}
+
+/* ── Brand ── */
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 2.5rem;
+}
+
+.brand-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+}
+
+.brand-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    letter-spacing: 0.01em;
+    color: var(--text-primary);
+}
+
+/* ── Home Card ── */
+.home-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 3rem 3.5rem;
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+}
+
+.home-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.4rem;
+    line-height: 1.15;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+}
+
+.home-sub {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin-bottom: 2.5rem;
+    line-height: 1.6;
+}
+
+/* ── Form ── */
+.name-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 0.85rem 1.1rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.input-group input::placeholder { color: var(--text-muted); }
+
+.input-group input:focus {
+    border-color: var(--accent);
+    background: #fff;
+}
+
+/* ── Answer form (question page) ── */
+.answer-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 2rem;
+}
+
+.answer-form input {
+    width: 100%;
+    padding: 0.85rem 1.1rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.answer-form input::placeholder { color: var(--text-muted); }
+.answer-form input:focus {
+    border-color: var(--accent);
+    background: #fff;
+}
+
+/* ── Button ── */
+.btn-primary {
+    display: block;
+    width: 100%;
+    padding: 0.9rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #fff;
+    background: var(--accent);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.18s, transform 0.1s;
+    letter-spacing: 0.01em;
+}
+
+.btn-primary:hover { background: var(--accent-dark); }
+.btn-primary:active { transform: scale(0.98); }
+
+/* ── Decorative pills ── */
+.home-deco {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 1.5rem;
+    max-width: 400px;
+}
+
+.deco-pill {
+    padding: 6px 14px;
+    border-radius: 100px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    letter-spacing: 0.02em;
+}
+
+/* ── Quiz Header ── */
+.quiz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 480px;
+    margin-bottom: 1.5rem;
+}
+
+.player-tag {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 4px 12px;
+    border-radius: 100px;
+}
+
+/* ── Quiz Card ── */
+.quiz-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2.5rem 3rem;
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+}
+
+/* ── Timer Ring ── */
+.timer-ring-wrapper {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 2rem;
+}
+
+.timer-ring {
+    width: 80px;
+    height: 80px;
+    transform: rotate(-90deg);
+}
+
+.ring-bg {
+    fill: none;
+    stroke: var(--accent-light);
+    stroke-width: 5;
+}
+
+.ring-fill {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 5;
+    stroke-linecap: round;
+    stroke-dasharray: 213.6;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 1s linear, stroke 0.5s;
+}
+
+.ring-fill.urgent { stroke: #C44E1B; }
+
+.timer-number {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem;
+    color: var(--accent);
+    line-height: 1;
+}
+
+/* ── Question ── */
+.question-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    margin-bottom: 0.6rem;
+}
+
+.question-text {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.55rem;
+    line-height: 1.35;
+    color: var(--text-primary);
+}
+
+/* ── Result Card ── */
+.result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 3rem 3.5rem;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+}
+
+.score-display {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 6px;
+    margin: 2rem 0 1rem;
+}
+
+.score-number {
+    font-family: 'DM Serif Display', serif;
+    font-size: 5rem;
+    color: var(--accent);
+    line-height: 1;
+}
+
+.score-sep {
+    font-size: 2.5rem;
+    color: var(--text-muted);
+}
+
+.score-total {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.5rem;
+    color: var(--text-muted);
+}
+
+.result-label {
+    font-size: 1.15rem;
+    font-weight: 500;
+    margin-bottom: 0.4rem;
+}
+
+.result-label.perfect { color: #1D9E75; }
+.result-label.great   { color: var(--accent); }
+.result-label.okay    { color: #BA7517; }
+.result-label.low     { color: var(--text-secondary); }
+
+.result-msg {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* ── Feedback Card ── */
+.feedback-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.feedback-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.25rem;
+}
+
+.feedback-icon svg {
+    width: 28px;
+    height: 28px;
+}
+
+.icon-correct {
+    background: #E1F5EE;
+    color: #0F6E56;
+}
+
+.icon-incorrect {
+    background: #FAECE7;
+    color: #993C1D;
+}
+
+.feedback-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    margin-bottom: 1.25rem;
+}
+
+.correct-text  { color: #0F6E56; }
+.incorrect-text { color: #993C1D; }
+
+.correct-answer-box {
+    background: #F7F5F2;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.25rem;
+    width: 100%;
+}
+
+.correct-answer-label {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: 0.3rem;
+}
+
+.correct-answer-text {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.2rem;
+    color: var(--text-primary);
+}
+
+.score-pill {
+    background: var(--accent-light);
+    color: var(--accent-dark);
+    border-radius: 100px;
+    padding: 6px 18px;
+    font-size: 0.9rem;
+}
+
+.score-pill strong { font-weight: 500; }
+
+/* ── Responsive ── */
+@media (max-width: 520px) {
+    .home-card, .quiz-card, .result-card { padding: 2rem 1.5rem; }
+    .home-title { font-size: 1.9rem; }
+    .question-text { font-size: 1.3rem; }
+    .score-number { font-size: 3.5rem; }
+}
+
+/* ── Skip Button ── */
+.btn-skip {
+    display: block;
+    width: 100%;
+    padding: 0.9rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: transparent;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.18s, border-color 0.18s, transform 0.1s;
+}
+
+.btn-skip:hover {
+    background: var(--bg);
+    border-color: var(--text-muted);
+}
+
+.btn-skip:active { transform: scale(0.98); }
+
+/* ── Mode Selection (home page) ── */
+.mode-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: 0.6rem;
+    text-align: left;
+}
+
+.mode-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 1rem;
+}
+
+/* Hide the actual radio input — the label handles the visual */
+.mode-option input[type="radio"] { display: none; }
+
+.mode-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0.85rem 1rem;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: border-color 0.18s, background 0.18s;
+    background: var(--bg);
+}
+
+/* Highlight the selected mode card */
+.mode-option input[type="radio"]:checked + .mode-btn {
+    border-color: var(--accent);
+    background: var(--accent-light);
+}
+
+.mode-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+
+.mode-desc {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+/* ── Multiple Choice Buttons ── */
+.choices {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-top: 0.5rem;
+}
+
+.choice-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 0.85rem 1rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s, background 0.15s, transform 0.1s;
+}
+
+.choice-btn:hover {
+    border-color: var(--accent);
+    background: var(--accent-light);
+}
+
+/* Highlighted state when a choice is clicked before submitting */
+.choice-btn.selected {
+    border-color: var(--accent);
+    background: var(--accent-light);
+}
+
+.choice-btn:active { transform: scale(0.98); }
+
+/* The A/B/C/D letter badge inside each choice button */
+.choice-letter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--accent);
+    flex-shrink: 0;
+}
+
+/* ── SAT Mode Layout ── */
+.sat-page-wrapper {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+}
+
+/* SAT header — full width bar across the top */
+.sat-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.85rem 2rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+}
+
+.sat-mode-badge {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    background: var(--accent-light);
+    padding: 3px 10px;
+    border-radius: 100px;
+}
+
+.sat-progress {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-left: auto;
+}
+
+/* SAT split layout — left panel and right panel side by side */
+.sat-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    flex: 1;
+    min-height: calc(100vh - 56px);
+}
+
+/* Left panel — question text */
+.sat-left {
+    padding: 2.5rem 3rem;
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+}
+
+.sat-question-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: 1.25rem;
+}
+
+.sat-question-body {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    line-height: 1.8;
+    color: var(--text-primary);
+}
+
+/* Right panel — answer choices */
+.sat-right {
+    padding: 2.5rem 3rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.sat-answer-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+}
+
+/* SAT choice buttons — larger and more spacious than quick quiz */
+.sat-choices {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.sat-choice-btn {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    width: 100%;
+    padding: 1rem 1.1rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s, background 0.15s, transform 0.1s;
+    line-height: 1.5;
+}
+
+.sat-choice-btn:hover {
+    border-color: var(--accent);
+    background: var(--accent-light);
+}
+
+.sat-choice-btn.selected {
+    border-color: var(--accent);
+    background: var(--accent-light);
+}
+
+.sat-choice-btn:active { transform: scale(0.99); }
+
+/* The A/B/C/D letter circle */
+.sat-choice-letter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.sat-choice-text {
+    flex: 1;
+}
+
+/* Responsive — stack on smaller screens */
+@media (max-width: 768px) {
+    .sat-layout {
+        grid-template-columns: 1fr;
+    }
+    .sat-left {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding: 1.5rem;
+    }
+    .sat-right {
+        padding: 1.5rem;
+    }
+}
+
+/* ── Home Links ── */
+.home-links {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+}
+
+.home-link {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+.home-link:hover { color: var(--accent); }
+
+/* ── Leaderboard ── */
+.lb-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    max-width: 700px;
+    width: 100%;
+    overflow: hidden;
+}
+
+.lb-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+}
+
+.lb-tab {
+    flex: 1;
+    padding: 0.9rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+}
+
+.lb-tab:hover { background: var(--bg); }
+
+.lb-tab.active {
+    color: var(--accent);
+    border-bottom: 2px solid var(--accent);
+    background: var(--surface);
+}
+
+.lb-panel { padding: 1.5rem; }
+
+.lb-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.lb-table th {
+    text-align: left;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    padding: 0 0.5rem 0.75rem;
+    font-weight: 500;
+}
+
+.lb-table td {
+    padding: 0.65rem 0.5rem;
+    color: var(--text-primary);
+    border-top: 1px solid var(--border);
+}
+
+.lb-rank  { font-weight: 500; color: var(--text-muted); width: 32px; }
+.lb-name  { font-weight: 500; }
+.lb-pct   { font-weight: 500; color: var(--accent); }
+.lb-date  { color: var(--text-muted); font-size: 0.82rem; }
+
+/* Medal rows */
+.lb-gold   td { background: #FFFBEB; }
+.lb-silver td { background: #F8F8F8; }
+.lb-bronze td { background: #FFF5F0; }
+
+.lb-gold   .lb-rank::before { content: "🥇 "; }
+.lb-silver .lb-rank::before { content: "🥈 "; }
+.lb-bronze .lb-rank::before { content: "🥉 "; }
+
+.lb-empty {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    padding: 2rem 0;
+}
+
+/* ── Stats Page ── */
+.stats-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    max-width: 760px;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.stats-section-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: 1.25rem;
+    font-weight: 500;
+}
+
+.stats-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 1rem;
+}
+
+.stats-metric {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 4px;
+}
+
+.stats-metric-value {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    color: var(--accent);
+    line-height: 1;
+}
+
+.stats-metric-label {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+/* Score trend bar chart */
+.trend-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 120px;
+    padding-bottom: 1.5rem;
+    position: relative;
+}
+
+.trend-bar-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+    gap: 4px;
+}
+
+.trend-bar {
+    width: 100%;
+    background: var(--accent);
+    border-radius: 4px 4px 0 0;
+    min-height: 4px;
+    opacity: 0.85;
+    transition: opacity 0.15s;
+}
+
+.trend-bar:hover { opacity: 1; }
+
+.trend-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+/* Category accuracy bars */
+.cat-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.cat-row {
+    display: grid;
+    grid-template-columns: 140px 1fr 50px 60px;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.875rem;
+}
+
+.cat-name  { color: var(--text-primary); font-weight: 500; }
+.cat-pct   { color: var(--accent); font-weight: 500; text-align: right; }
+.cat-detail { color: var(--text-muted); font-size: 0.78rem; }
+
+.cat-bar-bg {
+    background: var(--bg);
+    border-radius: 100px;
+    height: 8px;
+    overflow: hidden;
+}
+
+.cat-bar {
+    height: 100%;
+    border-radius: 100px;
+    transition: width 0.4s ease;
+}
+
+.cat-strong { background: #1D9E75; }  /* green — 70%+ */
+.cat-mid    { background: var(--accent); }  /* orange — 50-69% */
+.cat-weak   { background: #993C1D; }  /* red — below 50% */
+
+/* Quick Quiz vs SAT side by side */
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    max-width: 760px;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 520px) {
+    .stats-grid { grid-template-columns: 1fr; }
+    .cat-row { grid-template-columns: 100px 1fr 40px; }
+    .cat-detail { display: none; }
+}
+
+/* ── Login / Welcome Row ── */
+.welcome-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.logout-btn {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.logout-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+/* ── Auth error message ── */
+.auth-error {
+    background: #FAECE7;
+    color: #993C1D;
+    border: 1px solid #F0997B;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+/* ── Stats page full layout ── */
+.stats-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+}
+
+.stats-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.85rem 2rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+}
+
+.stats-header .player-tag { margin-left: auto; }
+
+.stats-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    padding: 1.5rem 2rem;
+    flex: 1;
+    align-items: start;
+}
+
+.stats-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.stats-mini-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.stats-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    padding: 4rem 2rem;
+    color: var(--text-muted);
+    font-size: 1rem;
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .stats-body { grid-template-columns: 1fr; padding: 1rem; }
+    .stats-mini-grid { grid-template-columns: 1fr; }
+    .stats-header { padding: 0.85rem 1rem; }
+}
+
+/* ── Home mode card buttons ── */
+.mode-card-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    padding: 1rem 1.1rem;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s, background 0.15s;
+    position: relative;
+    text-decoration: none;
+    color: var(--text-primary);
+}
+
+.mode-card-btn:hover {
+    border-color: var(--accent);
+    background: var(--accent-light);
+}
+
+.mode-card-title {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.mode-card-desc {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+.expand-arrow {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* Full test expand options */
+.mode-card-expand { width: 100%; }
+
+.full-test-options {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 6px;
+    padding-left: 1rem;
+}
+
+.full-test-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.full-test-btn:hover {
+    border-color: var(--accent);
+    background: var(--accent-light);
+}
+
+.full-test-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.full-test-meta {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+/* ── Module timer in SAT header ── */
+.module-timer {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 4px 12px;
+    border-radius: 8px;
+    letter-spacing: 0.05em;
+}
+
+/* ── Break page timer ── */
+.break-timer {
+    font-family: 'DM Serif Display', serif;
+    font-size: 4rem;
+    color: var(--accent);
+    margin: 1.5rem 0 0.5rem;
+    line-height: 1;
+}
+
+/* ── Full result page ── */
+.sat-score-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 1.5rem 0;
+}
+
+.sat-score-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: 0.4rem;
+}
+
+.sat-score-value {
+    font-family: 'DM Serif Display', serif;
+    font-size: 5rem;
+    color: var(--accent);
+    line-height: 1;
+}
+
+.sat-score-range {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+}
+
+.full-result-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.full-result-section {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    text-align: left;
+}
+
+.section-score {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem;
+    color: var(--text-primary);
+    margin: 0.3rem 0;
+}
+
+.section-detail {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+}
+
+.section-bar-bg {
+    background: var(--border);
+    border-radius: 100px;
+    height: 6px;
+    overflow: hidden;
+}
+
+.section-bar {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 100px;
+    transition: width 0.4s ease;
+}
+
+/* ── Full test question nav bar ── */
+.q-nav-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 0.75rem 2rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+}
+
+.q-nav-dot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    text-decoration: none;
+    border: 1.5px solid var(--border);
+    transition: border-color 0.15s, background 0.15s;
+}
+
+/* Answered — solid accent background */
+.q-nav-answered {
+    background: var(--accent-light);
+    color: var(--accent-dark);
+    border-color: var(--accent);
+}
+
+/* Unanswered — plain */
+.q-nav-unanswered {
+    background: var(--bg);
+    color: var(--text-muted);
+}
+
+/* Current question — bold outline */
+.q-nav-current {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent);
+    color: var(--accent-dark);
+    font-weight: 700;
+}
+
+/* Finish module / next module navigation buttons */
+.ft-nav-btns {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+    align-items: center;
+}

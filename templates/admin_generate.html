@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gnosis — Admin: Generate Questions</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .admin-card {
+            background: var(--card-bg, #fff);
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 600px;
+            margin: 2rem auto;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+        }
+        .admin-section {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .admin-section h3 {
+            margin: 0 0 1rem 0;
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.1rem;
+        }
+        .form-row {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            flex: 1;
+            min-width: 140px;
+        }
+        .form-group label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .form-group select,
+        .form-group input {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.95rem;
+            background: #f9fafb;
+        }
+        .btn-generate {
+            background: #1a1a2e;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 0.65rem 1.5rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            width: 100%;
+        }
+        .btn-generate:hover { opacity: 0.85; }
+        .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; }
+        .log-box {
+            background: #0f172a;
+            color: #86efac;
+            border-radius: 10px;
+            padding: 1rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+            min-height: 120px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-top: 1rem;
+        }
+        .log-box .err  { color: #f87171; }
+        .log-box .info { color: #93c5fd; }
+        .badge {
+            display: inline-block;
+            background: #dcfce7;
+            color: #166534;
+            border-radius: 99px;
+            padding: 0.15rem 0.6rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-left: 0.5rem;
+        }
+        .stats-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .stat-pill {
+            background: #f3f4f6;
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+        }
+        .stat-pill .num {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.4rem;
+            display: block;
+        }
+        .stat-pill .lbl {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+<div class="page-wrapper">
+<div class="admin-card">
+    <span class="brand-name">Gnosis</span>
+    <h2 style="font-family:'DM Serif Display',serif; margin-top:0.5rem;">
+        AI Question Generator <span class="badge">Admin</span>
+    </h2>
+
+    <!-- DB Stats -->
+    <div class="stats-row">
+        <div class="stat-pill">
+            <span class="num" id="stat-total">—</span>
+            <span class="lbl">Total Questions</span>
+        </div>
+        <div class="stat-pill">
+            <span class="num" id="stat-sat">—</span>
+            <span class="lbl">SAT Questions</span>
+        </div>
+        <div class="stat-pill">
+            <span class="num" id="stat-full">—</span>
+            <span class="lbl">Full Test Questions</span>
+        </div>
+        <div class="stat-pill">
+            <span class="num" id="stat-ai">—</span>
+            <span class="lbl">AI Generated</span>
+        </div>
+    </div>
+
+    <!-- Quick / SAT Practice Generator -->
+    <div class="admin-section">
+        <h3>Generate SAT Practice / Quick Quiz Questions</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Mode</label>
+                <select id="gen-mode">
+                    <option value="sat">SAT Practice</option>
+                    <option value="quick">Quick Quiz</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Subject</label>
+                <select id="gen-subject">
+                    <option value="Math">Math</option>
+                    <option value="Reading and Writing">Reading & Writing</option>
+                    <option value="General Knowledge">General Knowledge</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Category</label>
+                <select id="gen-category">
+                    <option value="Algebra">Algebra</option>
+                    <option value="Advanced Math">Advanced Math</option>
+                    <option value="Problem-Solving and Data Analysis">Problem-Solving & Data</option>
+                    <option value="Geometry and Trigonometry">Geometry & Trig</option>
+                    <option value="Information and Ideas">Information & Ideas</option>
+                    <option value="Craft and Structure">Craft & Structure</option>
+                    <option value="Expression of Ideas">Expression of Ideas</option>
+                    <option value="Standard English Conventions">Standard English</option>
+                    <option value="Science">Science</option>
+                    <option value="History">History</option>
+                    <option value="Geography">Geography</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Difficulty</label>
+                <select id="gen-difficulty">
+                    <option value="easy">Easy</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Count</label>
+                <input type="number" id="gen-count" value="20" min="5" max="100">
+            </div>
+        </div>
+        <button class="btn-generate" id="btn-generate" onclick="startGenerate()">
+            ✨ Generate Questions
+        </button>
+    </div>
+
+    <!-- Full Test Generator -->
+    <div class="admin-section">
+        <h3>Generate Full Practice Test</h3>
+        <p style="font-size:0.875rem; color:#6b7280; margin-top:0;">
+            Generates all 162 questions needed for one complete adaptive practice test
+            (RW + Math × easy/medium/hard modules).
+        </p>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Test Number</label>
+                <select id="gen-test-number">
+                    <option value="1">Practice Test 1</option>
+                    <option value="2">Practice Test 2</option>
+                    <option value="3">Practice Test 3</option>
+                    <option value="4">Practice Test 4</option>
+                    <option value="5">Practice Test 5</option>
+                </select>
+            </div>
+        </div>
+        <button class="btn-generate" id="btn-full-test" onclick="startFullTest()">
+            📋 Generate Full Test
+        </button>
+    </div>
+
+    <!-- Log output -->
+    <div class="log-box" id="log">Ready. Click a button above to start generating.\n</div>
+
+    <a href="{{ url_for('home') }}" style="display:block; text-align:center; margin-top:1.5rem;
+       color:#6b7280; text-decoration:none; font-size:0.9rem;">← Back to Home</a>
+</div>
+</div>
+
+<script>
+const log = document.getElementById('log');
+
+function appendLog(msg, cls='') {
+    const span = document.createElement('span');
+    if (cls) span.className = cls;
+    span.textContent = msg + '\n';
+    log.appendChild(span);
+    log.scrollTop = log.scrollHeight;
+}
+
+function setButtons(disabled) {
+    document.getElementById('btn-generate').disabled  = disabled;
+    document.getElementById('btn-full-test').disabled = disabled;
+}
+
+async function loadStats() {
+    try {
+        const r = await fetch('/admin/question_stats');
+        const d = await r.json();
+        document.getElementById('stat-total').textContent = d.total ?? '—';
+        document.getElementById('stat-sat').textContent   = d.sat   ?? '—';
+        document.getElementById('stat-full').textContent  = d.full  ?? '—';
+        document.getElementById('stat-ai').textContent    = d.ai    ?? '—';
+    } catch(e) { /* ignore */ }
+}
+
+async function startGenerate() {
+    const mode       = document.getElementById('gen-mode').value;
+    const category   = document.getElementById('gen-category').value;
+    const difficulty = document.getElementById('gen-difficulty').value;
+    const count      = parseInt(document.getElementById('gen-count').value);
+
+    appendLog(`\n▶ Generating ${count} ${mode} questions — ${category} (${difficulty})...`, 'info');
+    setButtons(true);
+
+    try {
+        const r = await fetch('/admin/generate', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ mode, category, difficulty, count })
+        });
+        const d = await r.json();
+        if (d.error) {
+            appendLog(`✗ Error: ${d.error}`, 'err');
+        } else {
+            appendLog(`✅ Done! Inserted ${d.inserted} questions.`);
+        }
+    } catch(e) {
+        appendLog(`✗ Request failed: ${e}`, 'err');
+    }
+
+    setButtons(false);
+    loadStats();
+}
+
+async function startFullTest() {
+    const testNum = parseInt(document.getElementById('gen-test-number').value);
+    appendLog(`\n▶ Generating full Practice Test ${testNum} (this may take 1-2 minutes)...`, 'info');
+    setButtons(true);
+
+    try {
+        const r = await fetch('/admin/generate_full_test', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ test_number: testNum })
+        });
+        const d = await r.json();
+        if (d.error) {
+            appendLog(`✗ Error: ${d.error}`, 'err');
+        } else {
+            appendLog(`✅ Practice Test ${testNum} complete! Inserted ${d.inserted} questions.`);
+        }
+    } catch(e) {
+        appendLog(`✗ Request failed: ${e}`, 'err');
+    }
+
+    setButtons(false);
+    loadStats();
+}
+
+// Update category options based on subject
+document.getElementById('gen-subject').addEventListener('change', function() {
+    const cat = document.getElementById('gen-category');
+    const mathCats = ['Algebra','Advanced Math','Problem-Solving and Data Analysis','Geometry and Trigonometry'];
+    const rwCats   = ['Information and Ideas','Craft and Structure','Expression of Ideas','Standard English Conventions'];
+    const quickCats = ['Science','History','Geography','Literature','Sports','Music','Movies','Technology','General Knowledge'];
+
+    let options = [];
+    if (this.value === 'Math') options = mathCats;
+    else if (this.value === 'Reading and Writing') options = rwCats;
+    else options = quickCats;
+
+    cat.innerHTML = options.map(o => `<option value="${o}">${o}</option>`).join('');
+});
+
+loadStats();
+</script>
+</body>
+</html>

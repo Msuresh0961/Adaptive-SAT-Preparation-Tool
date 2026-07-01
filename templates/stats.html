@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gnosis — Stats for {{ username }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* ── Weakness alert card ── */
+        .weakness-alert {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.1rem 1.4rem;
+            border-radius: 12px;
+            margin: 1.5rem 2rem;
+            border-left: 5px solid;
+            background: var(--weakness-bg, #fff8f0);
+            box-shadow: 0 2px 8px rgba(0,0,0,.07);
+        }
+
+        .weakness-alert--critical {
+            --weakness-bg: #fff1f1;
+            border-left-color: #e53e3e;
+        }
+        .weakness-alert--warning {
+            --weakness-bg: #fffbeb;
+            border-left-color: #d97706;
+        }
+        .weakness-alert--mild {
+            --weakness-bg: #f0fdf4;
+            border-left-color: #16a34a;
+        }
+
+        .weakness-alert__icon { font-size: 2rem; flex-shrink: 0; }
+
+        .weakness-alert__body { flex: 1; }
+
+        .weakness-alert__label {
+            font-size: .75rem;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+            color: #6b7280;
+            margin: 0 0 .15rem;
+        }
+
+        .weakness-alert__category {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin: 0 0 .25rem;
+            color: var(--text-primary);
+        }
+
+        .weakness-alert__detail {
+            font-size: .875rem;
+            color: #374151;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .weakness-alert__cta { flex-shrink: 0; }
+
+        .btn--focus {
+            display: inline-block;
+            padding: .6rem 1.2rem;
+            border-radius: 8px;
+            background: var(--accent);
+            color: #fff;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 600;
+            font-size: .9rem;
+            border: none;
+            cursor: pointer;
+            transition: background .15s, transform .1s;
+            white-space: nowrap;
+        }
+        .btn--focus:hover  { background: var(--accent-dark); }
+        .btn--focus:active { transform: scale(.97); }
+
+        @media (max-width: 600px) {
+            .weakness-alert {
+                flex-wrap: wrap;
+                margin: 1rem;
+            }
+            .weakness-alert__cta { width: 100%; }
+            .btn--focus { width: 100%; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="stats-page">
+
+        <!-- Header -->
+        <header class="stats-header">
+            <a href="{{ url_for('home') }}" class="brand-name" style="text-decoration:none;">Gnosis</a>
+            <span class="player-tag">{{ username }}'s Stats</span>
+            <a href="{{ url_for('home') }}" class="logout-btn">← Home</a>
+        </header>
+
+        {% if all_stats.total_games == 0 %}
+        <div class="stats-empty">
+            <p>No games played yet. Go play some rounds!</p>
+            <a href="{{ url_for('home') }}" class="btn-primary" style="display:inline-block; text-decoration:none; margin-top:1rem;">Play Now</a>
+        </div>
+
+        {% else %}
+
+        <!-- ── Weakness Alert ── -->
+        {% if weakest_category %}
+        <div class="weakness-alert
+            {% if weakest_pct < 40 %}weakness-alert--critical
+            {% elif weakest_pct < 70 %}weakness-alert--warning
+            {% else %}weakness-alert--mild{% endif %}">
+
+            <div class="weakness-alert__icon">
+                {% if weakest_pct < 40 %}⚠️{% elif weakest_pct < 70 %}📉{% else %}💡{% endif %}
+            </div>
+
+            <div class="weakness-alert__body">
+                <p class="weakness-alert__label">Weakest area</p>
+                <p class="weakness-alert__category">{{ weakest_category }}</p>
+                <p class="weakness-alert__detail">
+                    You're answering <strong>{{ weakest_pct }}%</strong> of these correctly —
+                    {% if weakest_pct < 40 %}
+                        this topic needs urgent attention.
+                    {% elif weakest_pct < 70 %}
+                        there's real room to improve here.
+                    {% else %}
+                        a little extra practice could push your score higher.
+                    {% endif %}
+                </p>
+            </div>
+
+            <form action="{{ url_for('focus_start') }}" method="POST" class="weakness-alert__cta">
+                <input type="hidden" name="category"   value="{{ weakest_category }}">
+                <input type="hidden" name="difficulty" value="{{ weakest_difficulty }}">
+                <button type="submit" class="btn--focus">Focus here →</button>
+            </form>
+        </div>
+        {% endif %}
+
+        <div class="stats-body">
+
+            <!-- ── Left column ── -->
+            <div class="stats-col">
+
+                <!-- Overall metrics row -->
+                <div class="stats-card">
+                    <p class="stats-section-title">Overall</p>
+                    <div class="stats-metrics">
+                        <div class="stats-metric">
+                            <span class="stats-metric-value">{{ all_stats.total_games }}</span>
+                            <span class="stats-metric-label">Games</span>
+                        </div>
+                        <div class="stats-metric">
+                            <span class="stats-metric-value">{{ all_stats.avg_score_pct }}%</span>
+                            <span class="stats-metric-label">Avg score</span>
+                        </div>
+                        <div class="stats-metric">
+                            <span class="stats-metric-value">{{ all_stats.best_score_pct }}%</span>
+                            <span class="stats-metric-label">Best score</span>
+                        </div>
+                        <div class="stats-metric">
+                            <span class="stats-metric-value">{{ all_stats.avg_time_spent }}s</span>
+                            <span class="stats-metric-label">Avg time/q</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Quiz vs SAT side by side -->
+                <div class="stats-mini-grid">
+                    <div class="stats-card">
+                        <p class="stats-section-title">Quick Quiz</p>
+                        {% if quick_stats.total_games > 0 %}
+                        <div class="stats-metrics">
+                            <div class="stats-metric">
+                                <span class="stats-metric-value">{{ quick_stats.total_games }}</span>
+                                <span class="stats-metric-label">Games</span>
+                            </div>
+                            <div class="stats-metric">
+                                <span class="stats-metric-value">{{ quick_stats.avg_score_pct }}%</span>
+                                <span class="stats-metric-label">Avg</span>
+                            </div>
+                            <div class="stats-metric">
+                                <span class="stats-metric-value">{{ quick_stats.best_score_pct }}%</span>
+                                <span class="stats-metric-label">Best</span>
+                            </div>
+                        </div>
+                        {% else %}
+                        <p class="lb-empty" style="font-size:0.85rem; padding:0.5rem 0;">No Quick Quiz games yet.</p>
+                        {% endif %}
+                    </div>
+                    <div class="stats-card">
+                        <p class="stats-section-title">SAT Prep</p>
+                        {% if sat_stats.total_games > 0 %}
+                        <div class="stats-metrics">
+                            <div class="stats-metric">
+                                <span class="stats-metric-value">{{ sat_stats.total_games }}</span>
+                                <span class="stats-metric-label">Games</span>
+                            </div>
+                            <div class="stats-metric">
+                                <span class="stats-metric-value">{{ sat_stats.avg_score_pct }}%</span>
+                                <span class="stats-metric-label">Avg</span>
+                            </div>
+                            <div class="stats-metric">
+                                <span class="stats-metric-value">{{ sat_stats.best_score_pct }}%</span>
+                                <span class="stats-metric-label">Best</span>
+                            </div>
+                        </div>
+                        {% else %}
+                        <p class="lb-empty" style="font-size:0.85rem; padding:0.5rem 0;">No SAT Prep games yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Score trend chart -->
+                {% if all_stats.recent_scores %}
+                <div class="stats-card">
+                    <p class="stats-section-title">Score trend — last {{ all_stats.recent_scores|length }} games</p>
+                    <div class="trend-chart">
+                        {% for pct in all_stats.recent_scores %}
+                        <div class="trend-bar-wrapper">
+                            <div class="trend-bar" style="height:{{ [pct, 4]|max }}%;"></div>
+                            <span class="trend-label">{{ pct|int }}%</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+
+            <!-- ── Right column ── -->
+            <div class="stats-col">
+
+                <!-- Category breakdown -->
+                <div class="stats-card" style="height:100%;">
+                    <p class="stats-section-title">Strengths &amp; weaknesses by category</p>
+                    {% if all_stats.category_stats %}
+                    <div class="cat-list">
+                        {% for cat in all_stats.category_stats %}
+                        <div class="cat-row {% if weakest_category and cat.category == weakest_category %}cat-row--weakest{% endif %}">
+                            <span class="cat-name">
+                                {{ cat.category }}
+                                {% if weakest_category and cat.category == weakest_category %}
+                                <span style="font-size:0.7rem; color: {% if weakest_pct < 40 %}#e53e3e{% elif weakest_pct < 70 %}#d97706{% else %}#16a34a{% endif %}; font-weight:600; margin-left:4px;">
+                                    ← weakest
+                                </span>
+                                {% endif %}
+                            </span>
+                            <div class="cat-bar-bg">
+                                <div class="cat-bar {{ 'cat-strong' if cat.pct >= 70 else 'cat-weak' if cat.pct < 50 else 'cat-mid' }}"
+                                     style="width:{{ cat.pct }}%;"></div>
+                            </div>
+                            <span class="cat-pct">{{ cat.pct }}%</span>
+                            <span class="cat-detail">({{ cat.correct }}/{{ cat.total }})</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="lb-empty">Answer some questions to see category stats.</p>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
