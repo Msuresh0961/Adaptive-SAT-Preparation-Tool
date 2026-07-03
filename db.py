@@ -1,17 +1,138 @@
-import sqlite3
+import os
 import random
+import sqlite3
 
-DB_PATH = "quiz.db"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Use DB_PATH env var if set (e.g. on Railway: /data/quiz.db so it survives
+# redeploys via the mounted volume). Falls back to a local file for dev.
+DB_PATH = os.environ.get("DB_PATH", os.path.join(BASE_DIR, "quiz.db"))
 
 
 def get_connection():
     """Open and return a connection to the quiz database."""
+    # Make sure the parent directory exists (matters for a fresh volume mount).
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     con = sqlite3.connect(DB_PATH)
     con.row_factory = sqlite3.Row
     return con
 
 
-# ── User authentication ───────────────────────────────────────
+def init_db():
+    """Create all required tables if they do not already exist."""
+    con = get_connection()
+    cur = con.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL UNIQUE,
+            password_hash TEXT NOT NULL
+        )
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS game_sessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            score INTEGER NOT NULL,
+            total INTEGER NOT NULL,
+            skipped INTEGER NOT NULL DEFAULT 0,
+            mode TEXT NOT NULL,
+            played_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS question_results (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id INTEGER NOT NULL,
+            question_id INTEGER NOT NULL,
+            correct INTEGER NOT NULL DEFAULT 0,
+            skipped INTEGER NOT NULL DEFAULT 0,
+            timed_out INTEGER NOT NULL DEFAULT 0,
+            time_spent REAL NOT NULL DEFAULT 0,
+            FOREIGN KEY(session_id) REFERENCES game_sessions(id),
+            FOREIGN KEY(question_id) REFERENCES questions(id)
+        )
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS questions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            question TEXT NOT NULL,
+            choice_a TEXT,
+            choice_b TEXT,
+            choice_c TEXT,
+            choice_d TEXT,
+            answer TEXT NOT NULL,
+            category TEXT NOT NULL,
+            difficulty TEXT NOT NULL DEFAULT 'medium',
+            mode TEXT NOT NULL DEFAULT 'quick',
+            question_type TEXT NOT NULL DEFAULT 'multiple_choice',
+            explanation TEXT,
+            ai_generated INTEGER DEFAULT 0,
+            test_number INTEGER DEFAULT NULL
+        )
+    """)
+
+    con.commit()
+    con.close()
+
+
+init_db()
+
+
+def seed_questions_if_empty(seed_path=None):
+    """If the questions table is empty, load questions from a JSON seed file.
+
+    This protects against a fresh/empty database (e.g. a brand-new Railway
+    volume, or a lost volume) by restoring the question bank from a file
+    committed to git. Safe to call every startup -- it only inserts when
+    the table is empty, and it never touches users or game_sessions.
+    """
+    seed_path = seed_path or os.path.join(BASE_DIR, "questions_seed.json")
+    if not os.path.exists(seed_path):
+        return 0
+
+    con = get_connection()
+    cur = con.cursor()
+    cur.execute("SELECT COUNT(*) FROM questions")
+    count = cur.fetchone()[0]
+    if count > 0:
+        con.close()
+        return 0
+
+    import json
+    with open(seed_path, "r", encoding="utf-8") as f:
+        rows = json.load(f)
+
+    inserted = 0
+    for q in rows:
+        cur.execute("""
+            INSERT INTO questions
+                (question, choice_a, choice_b, choice_c, choice_d,
+                 answer, category, difficulty, mode, question_type,
+                 explanation, ai_generated, test_number)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            q.get("question"), q.get("choice_a"), q.get("choice_b"),
+            q.get("choice_c"), q.get("choice_d"), q.get("answer"),
+            q.get("category"), q.get("difficulty", "medium"),
+            q.get("mode", "quick"), q.get("question_type", "multiple_choice"),
+            q.get("explanation"), q.get("ai_generated", 0), q.get("test_number"),
+        ))
+        inserted += 1
+
+    con.commit()
+    con.close()
+    return inserted
+
+
+seed_questions_if_empty()
+
+
+# ── User authentication ───────────────────────────────────────────────────────
 
 def create_user(username, password_hash):
     """Create a new user. Returns True on success, False if username taken."""
@@ -43,7 +164,7 @@ def get_user(username):
     return dict(row) if row else None
 
 
-# ── Question fetching ─────────────────────────────────────────
+# ── Question fetching ─────────────────────────────────────────────────────────
 
 def get_questions(limit=20, mode="quick", category=None, difficulty=None):
     """Fetch a random selection of questions from the database."""
@@ -76,7 +197,7 @@ def get_questions(limit=20, mode="quick", category=None, difficulty=None):
             cur.execute(q, params)
             return [dict(row) for row in cur.fetchall()]
 
-        math_qs    = fetch_category(MATH_CATEGORIES, half)
+        math_qs = fetch_category(MATH_CATEGORIES, half)
         reading_qs = fetch_category(RW_CATEGORIES, limit - half)
 
         combined = math_qs + reading_qs
@@ -84,8 +205,7 @@ def get_questions(limit=20, mode="quick", category=None, difficulty=None):
         con.close()
         return combined
 
-    # Quick mode or SAT with specific category
-    query  = "SELECT * FROM questions WHERE mode = ?"
+    query = "SELECT * FROM questions WHERE mode = ?"
     params = [mode]
 
     if category:
@@ -103,8 +223,8 @@ def get_questions(limit=20, mode="quick", category=None, difficulty=None):
 
     # Backfill if not enough questions
     if len(questions) < limit:
-        existing_ids  = [q["id"] for q in questions]
-        placeholders  = ",".join(["?"] * len(existing_ids)) if existing_ids else "0"
+        existing_ids = [q["id"] for q in questions]
+        placeholders = ",".join(["?"] * len(existing_ids)) if existing_ids else "0"
         fallback_query = f"""
             SELECT * FROM questions
             WHERE mode = ?
@@ -125,7 +245,6 @@ def get_focus_questions(limit=10, category="Math", difficulty="medium"):
     con = get_connection()
     cur = con.cursor()
 
-    # Map broad categories to subcategories
     MATH_CATEGORIES = [
         "Algebra", "Advanced Math",
         "Problem-Solving and Data Analysis", "Geometry and Trigonometry", "Math"
@@ -155,7 +274,6 @@ def get_focus_questions(limit=10, category="Math", difficulty="medium"):
     )
     rows = cur.fetchall()
 
-    # Backfill if not enough of the requested difficulty
     if len(rows) < limit:
         existing_ids = [dict(r)["id"] for r in rows]
         excl = ",".join(["?"] * len(existing_ids)) if existing_ids else "0"
@@ -194,7 +312,6 @@ def get_full_test_module(test_number, category, difficulty, limit=27, exclude_id
 
     exclude_ids = exclude_ids or []
 
-    # Map broad category to specific subcategories
     MATH_CATEGORIES = [
         "Algebra", "Advanced Math",
         "Problem-Solving and Data Analysis", "Geometry and Trigonometry", "Math"
@@ -211,7 +328,7 @@ def get_full_test_module(test_number, category, difficulty, limit=27, exclude_id
     else:
         subcategories = [category]
 
-    cat_placeholders  = ",".join(["?"] * len(subcategories))
+    cat_placeholders = ",".join(["?"] * len(subcategories))
     excl_placeholders = ",".join(["?"] * len(exclude_ids)) if exclude_ids else "0"
 
     cur.execute(
@@ -227,11 +344,10 @@ def get_full_test_module(test_number, category, difficulty, limit=27, exclude_id
     )
     rows = cur.fetchall()
 
-    # Backfill with any difficulty from this test/category if not enough
     if len(rows) < limit:
-        existing_ids  = [dict(r)["id"] for r in rows]
-        all_excl      = exclude_ids + existing_ids
-        excl2         = ",".join(["?"] * len(all_excl)) if all_excl else "0"
+        existing_ids = [dict(r)["id"] for r in rows]
+        all_excl = exclude_ids + existing_ids
+        excl2 = ",".join(["?"] * len(all_excl)) if all_excl else "0"
         cur.execute(
             f"""SELECT * FROM questions
                 WHERE mode = 'full_test'
@@ -296,7 +412,7 @@ def fetch_questions_from_api(amount=20, category_id=None, difficulty=None):
     return saved
 
 
-# ── Saving results ────────────────────────────────────────────
+# ── Saving results ───────────────────────────────────────────────────────────
 
 def save_game_session(username, score, total, skipped, mode="quick"):
     """Save a completed game session. Returns the session ID."""
@@ -326,7 +442,7 @@ def save_question_result(session_id, question_id, correct, skipped, timed_out, t
     con.close()
 
 
-# ── Leaderboard ───────────────────────────────────────────────
+# ── Leaderboard ──────────────────────────────────────────────────────────────
 
 def get_leaderboard(mode="quick", limit=10):
     """Get top scores for a given mode ranked by percentage then most recent."""
@@ -346,7 +462,7 @@ def get_leaderboard(mode="quick", limit=10):
     return [dict(row) for row in rows]
 
 
-# ── Performance stats ─────────────────────────────────────────
+# ── Performance stats ────────────────────────────────────────────────────────
 
 def get_user_stats(username, mode=None):
     """Get performance stats for a specific user."""
@@ -408,10 +524,10 @@ def get_user_stats(username, mode=None):
     con.close()
 
     return {
-        "total_games":    overall["total_games"] or 0,
-        "avg_score_pct":  overall["avg_pct"] or 0,
+        "total_games": overall["total_games"] or 0,
+        "avg_score_pct": overall["avg_pct"] or 0,
         "best_score_pct": overall["best_pct"] or 0,
         "category_stats": category_stats,
-        "recent_scores":  recent_scores,
+        "recent_scores": recent_scores,
         "avg_time_spent": avg_time,
     }
