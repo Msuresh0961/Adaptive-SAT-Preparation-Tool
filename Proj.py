@@ -1,15 +1,16 @@
 from flask import Flask, request, render_template, redirect, url_for, session
 from markupsafe import escape
 from werkzeug.security import generate_password_hash, check_password_hash
-from db import (get_questions, get_question_by_id, get_full_test_module,
-                get_focus_questions, save_game_session, save_question_result,
-                get_leaderboard, get_user_stats, create_user, get_user)
+from db import (
+    get_questions, get_question_by_id, get_full_test_module,
+    get_focus_questions, save_game_session, save_question_result,
+    get_leaderboard, get_user_stats, create_user, get_user, DB_PATH
+)
 import os, json, time, requests
 from dotenv import load_dotenv
 load_dotenv()
 
-import os
-print("DB PATH:", os.path.abspath("quiz.db"))
+print("DB PATH:", DB_PATH)
 
 app = Flask(__name__)
 app.secret_key = "replace-with-a-random-secret"
@@ -28,7 +29,7 @@ SAT_MATH_CATEGORIES = [
     "Problem-Solving and Data Analysis", "Geometry and Trigonometry",
 ]
 
-# ── SAT Adaptive Score Conversion ──
+# ── SAT Adaptive Score Conversion ─────────────────────────────────────────────
 # Module 1 is always the same (medium difficulty)
 # Module 2 easy caps at ~630 RW / ~610 Math
 # Module 2 hard can reach 800
@@ -84,7 +85,7 @@ MATH_HARD_M2_CONVERSION = {
 
 def estimate_sat_score(rw_m1, rw_m2, math_m1, math_m2, rw_m2_diff="hard", math_m2_diff="hard"):
     """Convert raw module scores to estimated SAT scaled score (400-1600).
-    
+
     Args:
         rw_m1:        correct answers in RW Module 1 (0-27)
         rw_m2:        correct answers in RW Module 2 (0-27)
@@ -108,7 +109,8 @@ def estimate_sat_score(rw_m1, rw_m2, math_m1, math_m2, rw_m2_diff="hard", math_m
 
     return rw_scaled + math_scaled
 
-# ── Auth helpers ──────────────────────────────────────────────
+
+# ── Auth helpers ──────────────────────────────────────────────────────────────
 
 def logged_in():
     return "logged_in_name" in session
@@ -117,7 +119,23 @@ def current_user():
     return session.get("logged_in_name", "")
 
 
-# ── Auth routes ───────────────────────────────────────────────
+def normalize_mode(raw_mode):
+    mode = (raw_mode or "quick").strip().lower().replace("-", "_")
+    aliases = {
+        "quiz": "quick",
+        "quick quiz": "quick",
+        "quick_quiz": "quick",
+        "quiz mode": "quick",
+        "sat practice": "sat",
+        "sat_practice": "sat",
+        "practice": "sat",
+        "full test": "full_test",
+        "fulltest": "full_test",
+    }
+    return aliases.get(mode, mode)
+
+
+# ── Auth routes ───────────────────────────────────────────────────────────────
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -174,7 +192,7 @@ def logout():
     return redirect(url_for("login"))
 
 
-# ── Home ──────────────────────────────────────────────────────
+# ── Home ──────────────────────────────────────────────────────────────────────
 
 @app.route("/", methods=["GET", "POST"])
 def home():
@@ -184,13 +202,28 @@ def home():
     username = current_user()
 
     if request.method == "POST":
-        mode = request.form.get("mode", "quick")
+        mode = normalize_mode(request.form.get("mode", "quick"))
 
         if mode == "full_test":
             test_number = int(request.form.get("test_number", 1))
             return start_full_test(test_number)
 
         questions = get_questions(limit=20, mode=mode)
+
+        if not questions and mode == "quick":
+            questions = get_questions(limit=20, mode="sat")
+            mode = "sat"
+        elif not questions and mode == "sat":
+            questions = get_questions(limit=20, mode="quick")
+            mode = "quick"
+
+        if not questions:
+            return render_template(
+                "home.html",
+                username=username,
+                error="No questions were found. Generate questions for this mode first."
+            )
+
         session["name"]         = username
         session["score"]        = 0
         session["current"]      = 0
@@ -203,7 +236,7 @@ def home():
     return render_template("home.html", username=username)
 
 
-# ── Regular quiz routes ───────────────────────────────────────
+# ── Regular quiz routes ──────────────────────────────────────────────────────
 
 @app.route("/question", methods=["GET", "POST"])
 def question():
@@ -310,9 +343,8 @@ def result():
     )
 
 
-# ── Full test routes ──────────────────────────────────────────
+# ── Full test routes ─────────────────────────────────────────────────────────
 
-# Module config: (category, module_num, time_seconds, label)
 MODULES = [
     ("Reading and Writing", 1, 32 * 60, "RW Module 1"),
     ("Reading and Writing", 2, 32 * 60, "RW Module 2"),
@@ -320,7 +352,6 @@ MODULES = [
     ("Math",                2, 35 * 60, "Math Module 2"),
 ]
 
-# Adaptive thresholds
 RW_HARD_THRESHOLD   = 20
 MATH_HARD_THRESHOLD = 17
 
@@ -329,7 +360,6 @@ def start_full_test(test_number):
     """Initialize a full test session and load RW Module 1."""
     username = current_user()
 
-    # Reset used IDs tracker for new test
     session["ft_used_question_ids"] = []
 
     questions = get_full_test_module(
@@ -340,7 +370,6 @@ def start_full_test(test_number):
         exclude_ids=[]
     )
 
-    # Track used IDs to prevent duplicates across modules
     session["ft_used_question_ids"] = [q["id"] for q in questions]
 
     n = len(questions)
@@ -395,10 +424,8 @@ def full_test_module():
             session["ft_current"] = target
             return redirect(url_for("full_test_module"))
         else:
-            # "save" — stay on same question
             return redirect(url_for("full_test_module"))
 
-    # GET — render current question
     current_q = session["ft_current"]
 
     goto = request.args.get("goto")
@@ -480,7 +507,6 @@ def finish_module():
             exclude_ids=session.get("ft_used_question_ids", [])
         )
 
-        # Add newly loaded IDs to used list to prevent future duplicates
         used_ids = session.get("ft_used_question_ids", [])
         used_ids.extend([q["id"] for q in questions])
         session["ft_used_question_ids"] = used_ids
@@ -493,14 +519,12 @@ def finish_module():
         session["ft_results_before_module"] = len(session["ft_results"])
         session["ft_answers"]               = {str(i): "" for i in range(n)}
 
-    # After RW Module 1 — load RW Module 2
     if module_idx == 0:
         m2_difficulty = "hard" if module_score >= RW_HARD_THRESHOLD else "easy"
         session["ft_rw_m2_difficulty"] = m2_difficulty
         load_module("Reading and Writing", m2_difficulty, next_module_idx)
         return redirect(url_for("full_test_module"))
 
-    # After RW Module 2 — show break before Math
     if module_idx == 1:
         rw_total_score = session["ft_module_scores"][0] + module_score
         session["ft_module_index"] = next_module_idx
@@ -510,14 +534,12 @@ def finish_module():
             rw_total=54
         )
 
-    # After Math Module 1 — load Math Module 2
     if module_idx == 2:
         m2_difficulty = "hard" if module_score >= MATH_HARD_THRESHOLD else "easy"
         session["ft_math_m2_difficulty"] = m2_difficulty
         load_module("Math", m2_difficulty, next_module_idx)
         return redirect(url_for("full_test_module"))
 
-    # After Math Module 2 — test complete
     if module_idx == 3:
         return finish_full_test()
 
@@ -538,7 +560,6 @@ def break_done():
         exclude_ids=session.get("ft_used_question_ids", [])
     )
 
-    # Track used IDs
     used_ids = session.get("ft_used_question_ids", [])
     used_ids.extend([q["id"] for q in questions])
     session["ft_used_question_ids"] = used_ids
@@ -594,8 +615,8 @@ def finish_full_test():
         test_number=session["ft_test_number"],
         sat_score=sat_score,
         rw_score=rw_total,   rw_total=54,
-        rw_m1_score=rw_m1,  rw_m1_total=27,
-        rw_m2_score=rw_m2,  rw_m2_total=27,
+        rw_m1_score=rw_m1,   rw_m1_total=27,
+        rw_m2_score=rw_m2,   rw_m2_total=27,
         rw_m2_diff=session.get("ft_rw_m2_difficulty", "medium"),
         math_score=math_total, math_total=54,
         math_m1_score=math_m1, math_m1_total=27,
@@ -604,7 +625,7 @@ def finish_full_test():
     )
 
 
-# ── Focus practice routes ─────────────────────────────────────
+# ── Focus practice routes ────────────────────────────────────────────────────
 
 @app.route("/focus")
 def focus_select():
@@ -637,7 +658,7 @@ def focus_start():
     return redirect(url_for("question"))
 
 
-# ── Leaderboard & stats ───────────────────────────────────────
+# ── Leaderboard & stats ──────────────────────────────────────────────────────
 
 @app.route("/leaderboard")
 def leaderboard():
@@ -730,7 +751,7 @@ Return ONLY a JSON array, no markdown:
 def _insert_questions_to_db(questions, mode, test_number=None):
     """Insert generated questions into quiz.db."""
     import sqlite3
-    conn = sqlite3.connect("quiz.db")
+    conn = sqlite3.connect(DB_PATH)
     cur  = conn.cursor()
 
     for col in ["ai_generated INTEGER DEFAULT 0", "test_number INTEGER DEFAULT NULL"]:
@@ -778,7 +799,7 @@ def admin_question_stats():
     if not logged_in() or current_user() != ADMIN_USERNAME:
         return {"error": "Unauthorized"}, 403
     import sqlite3
-    conn = sqlite3.connect("quiz.db")
+    conn = sqlite3.connect(DB_PATH)
     cur  = conn.cursor()
     total = cur.execute("SELECT COUNT(*) FROM questions").fetchone()[0]
     sat   = cur.execute("SELECT COUNT(*) FROM questions WHERE mode='sat'").fetchone()[0]
