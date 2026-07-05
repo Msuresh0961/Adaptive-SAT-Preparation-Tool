@@ -1,6 +1,6 @@
-# Gnosis
+# Adaptive SAT Prep Tool
 
-Gnosis is a SAT prep and quiz platform built to support both structured SAT practice and fast, low-pressure practice through Quick Quiz mode. It combines a realistic test-taking experience with modern UI, AI-assisted question generation, and analytics-driven review.
+This is a SAT prep and quiz platform built to support both structured SAT practice and fast, low-pressure practice through Quick Quiz mode. It combines a realistic test-taking experience with modern UI, AI-assisted question generation, and analytics-driven review.
 
 ## Features
 
